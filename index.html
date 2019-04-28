@@ -1,0 +1,216 @@
+<!DOCTYPE html><html><head>
+  <script src="p5.min.js"></script>
+  <script src="p5.dom.min.js"></script>
+  <script src="p5.sound.min.js"></script>
+  <meta charset="utf-8">
+  <title>Display a map</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+  <script src="mapbox-gl.js"></script>
+  <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css" rel="stylesheet">
+  <style>
+    body { margin:0; padding:0; }
+    #map { position:absolute; top:0; bottom:0; width:100%; }
+  </style>
+</head>
+<body>
+<style>
+.map-overlay {
+		font: 9px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+		position: absolute;
+		width: 25%;
+		top: 0;
+		left: 0;
+		padding: 10px;
+	}
+ 
+.map-overlay .map-overlay-inner {
+		background-color: #fff;
+		box-shadow:0 1px 2px rgba(0, 0, 0, 0.20);
+		border-radius: 3px;
+		padding: 10px;
+	margin-bottom: 10px;
+}
+ 
+.map-overlay h2 {
+	line-height: 24px;
+	display: block;
+	margin: 0 0 10px;
+	}
+ 
+.map-overlay .legend .bar {
+height: 10px;
+width: 100%;
+background: linear-gradient(to right, #FCA107, #7F3121);
+}
+ 
+.map-overlay input {
+background-color: transparent;
+display: inline-block;
+width: 100%;
+position: relative;
+margin: 0;
+cursor: ew-resize;
+}
+
+
+</style>
+ 
+<div id="map"></div>
+ 
+<div class="map-overlay top">
+<div class="map-overlay-inner">
+<h2>Jobs and Job Density from 2000 to 2017</h2>
+    
+<label id="year"></label>
+<input id="slider" type="range" min="0" max="17" step="1" value="0">
+<p><i>(Hover mouse on features for details)</i></p>  
+<button id="button" type="button">Animate</button>  
+</div>
+<div class="map-overlay-inner">
+<div id="legend" class="legend">
+<div class="bar"></div>
+<div>Job Density</div>
+</div>
+</div>
+</div>
+
+<script src="sketch.js"></script>  
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYXJ1bmtvc2h5MTgiLCJhIjoiY2pxejNqMTl2MDdseTQ4cGNpdXN6OXE2ZiJ9.C9NoJtuiT9pDw5pyhYZxhQ';
+const map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/arunkoshy18/cjt24i8yq1feg1fp19f0f08su',
+  center: [0.1, 51.711651],
+  zoom: 9,
+   pitch: 200 // pitch in degrees
+
+});
+var data;
+var geojson; 
+var year = 2000;
+var setRotation = true;
+var animation ;  
+var yrcounter = 0;  
+
+function rotateCamera(timestamp) {
+ 
+map.rotateTo((timestamp / 1000) % 360, {duration: 1000});
+var timer = setTimeout(function(){  
+          yr = 2000 + (yrcounter%18);
+          document.getElementById('slider').value= yrcounter%18; 
+          yrcounter+=1;    
+          map.setFilter('extrusion', ["==",['get', 'year'], yr]);  
+          },1000);  
+ 
+        animation = requestAnimationFrame(rotateCamera);
+  clearTimeout(timer); 
+}
+
+  
+function stoprotateCamera(timestamp) {
+map.rotateTo((timestamp / 300) % 360, {duration: 100});
+map.setFilter('extrusion', ["==",['get', 'year'], year]);  
+cancelAnimationFrame(animation);
+}
+  
+var popup = new mapboxgl.Popup({
+    closeButton: false
+});
+  
+map.addControl(new mapboxgl.NavigationControl());
+ 
+map.on('load', function () {
+
+   
+  	
+map.addSource('jobdata',{  
+					    "type": "geojson",
+              "data": geojson
+    });
+  
+year = parseInt(document.getElementById('year').textContent);  
+console.log(document.getElementById('year').textContent);  
+
+  document.getElementById('year').textContent = 2000;
+
+  document.getElementById('slider').addEventListener('input', function(e) {
+     year = 2000 +  parseInt(e.target.value, 10);
+     document.getElementById('year').textContent = year;     
+     map.setFilter('extrusion', ["==",['get', 'year'], year]);
+                   
+     }); 
+
+  document.getElementById('button').addEventListener('click', function(e) {
+  
+     if(setRotation){
+         document.getElementById('button').textContent = 'Stop Animation';  
+         rotateCamera(0);
+         setRotation = false;  
+     }
+     else{    
+          console.log('inside button');
+          document.getElementById('button').textContent = 'Animate';  
+          stoprotateCamera(0);
+          setRotation = true; 
+     }
+                   
+     });   
+console.log(document.getElementById('year').textContent);
+console.log(geojson);
+map.addLayer({
+        'id': 'extrusion',
+        'type': 'fill-extrusion',        
+        'source': 'jobdata',        
+        'paint': {    
+           'fill-extrusion-height': [
+                						"interpolate", 
+             								["linear"], 
+             								['get', 'number_of_jobs'] ,              
+                 						0,0,
+                            20000,3000,
+                 						1000000,20000
+            					],
+            'fill-extrusion-base': 0,
+            'fill-extrusion-color': [
+ 													'interpolate',
+ 												  ['linear'],
+ 												  ['get', 'job_density'],
+ 												  0.05, '#FCA107',
+                          1,'#7f4821',  
+ 												  4, '#7F3121'	],
+            'fill-extrusion-height-transition':{
+                duration: 2000,
+                delay: 10
+            },
+            'fill-extrusion-opacity': 1      
+        }
+  ,"filter": ["==",['number',['get', 'year']], 2000]  
+    }); 
+  
+ map.on('mousemove', 'extrusion', function(e) {
+        // Change the cursor style as a UI indicator.
+        map.getCanvas().style.cursor = 'pointer';
+
+        // Single out the first found feature.
+        var feature = e.features[0];
+
+        // Display a popup with the name of the county
+        popup.setLngLat(e.lngLat)
+            .setHTML('<p> Area:'+ feature.properties.area +'</p>' +  
+                     '<p> Jobs:'+feature.properties.number_of_jobs+'</p>' +
+                     '<p> JobDensity:'+feature.properties.job_density+'</p>')
+            .addTo(map);
+    });
+
+    map.on('mouseleave', 'counties', function() {
+        map.getCanvas().style.cursor = '';
+        popup.remove();
+    });
+  
+});
+
+</script>
+
+
+
+</body></html>
