@@ -18,7 +18,8 @@ function setup() {
      var pol = [[[ lat1, lon1] , 
                  [ lat2, lon1] ,
                  [ lat2, lon2] ,
-                 [ lat1, lon2] ]];
+                 [ lat1, lon2] ,
+                 [ lat1, lon1] ]];
     console.log(geojson['features'][i]['geometry']['coordinates']);    
     geojson['features'][i]['geometry']['coordinates'] = pol;     
      console.log(geojson['features'][i]['geometry']['coordinates']);   
