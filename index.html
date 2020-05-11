@@ -143,13 +143,13 @@ console.log(document.getElementById('year').textContent);
   document.getElementById('button').addEventListener('click', function(e) {
   
      if(setRotation){
-         document.getElementById('button').textContent = 'Stop Animation';  
+         document.getElementById('button').textContent = 'Stop';  
          rotateCamera(0);
          setRotation = false;  
      }
      else{    
           console.log('inside button');
-          document.getElementById('button').textContent = 'Animate';  
+          document.getElementById('button').textContent = 'Play';  
           stoprotateCamera(0);
           setRotation = true; 
      }
