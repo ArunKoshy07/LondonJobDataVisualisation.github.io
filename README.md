@@ -1,6 +1,6 @@
 # LondonJobDataVisualisation.github.io
 
-London borough wise jobs and job density visualisation 
+London borough wise jobs and job density visualisation  - link to visualisation -  https://arunkoshy07.github.io/LondonJobDataVisualisation.github.io/
 
 
 This visualisation shows the variations in jobs and job density in London Boroughs from 2000 to 2017. The source of data set is https://data.london.gov.uk/dataset/jobs-and-job-density-borough . This visualisation will potentially shows the places worth investing in and could be leveraged for future housing and infra developments. 
